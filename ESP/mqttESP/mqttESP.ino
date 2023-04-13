@@ -13,10 +13,10 @@
 #define OLED_RESET     16 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-
-const char* ssid = "";
-const char* password = "";
-const char* mqtt_server = "";
+//"CroozBossChroma1908@"
+const char* ssid = "Iphone de Axel";
+const char* password = "CroozBossChroma1908@";
+const char* mqtt_server = "172.20.10.5";
 const char* mqtt_topic = "esp1/led";
 const char* mqtt_topic2 = "esp1/lcd";
 

@@ -1,4 +1,5 @@
 import paho.mqtt.publish as publish
+import sys
 
 # Definir les informations du broker MQTT
 mqtt_broker = "192.168.1.146"
