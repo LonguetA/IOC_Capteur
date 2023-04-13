@@ -1,0 +1,172 @@
+
+* {
+  margin: 0;
+  padding: 0;
+}
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 70px;
+  height: 30px;
+}
+
+form{
+  display: flex;
+  gap: 20%;
+}
+
+#lcdSEND{
+  size: 50%;
+}
+
+button{
+  display: block;
+  line-height: 14pt * 2;
+  padding: 0 20px;
+  background: #ffa580;
+  letter-spacing: 2px;
+  transition: .2s all ease-in-out;
+  outline: none;
+  border: 1px solid rgba(0,0,0,1);
+  box-shadow: 3px 3px 1px 1px #95a4ff, 3px 3px 1px 2px rgba(0,0,0,1);
+}
+
+
+button:hover{
+    background: rgba(0,0,0,1);
+    color: white;
+    border: 1px solid rgba(0,0,0,1);
+    margin-right: 10%;
+}
+body { 
+  font-family: "Fjalla One", sans-serif;
+  font-size: 14pt;
+  color: #2A293E;
+  display: flex;
+  justify-content: center;
+  background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/38816/image-from-rawpixel-id-2210775-jpeg.jpg); 
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+input:focus{
+  border-bottom: 5px solid #ffa580;
+}
+input{
+  background-color:#f8f4e5 ;
+  border: none;
+  border-bottom: 5px solid rgba(0,0,0,1);
+  margin-bottom: 14pt * 2;
+  min-width: 250px;
+  padding-left: 5px;
+  outline: none;
+  line-height: 14pt * 2;
+  color: rgba(0,0,0,1);
+  font-size: 14pt;
+  line-height: 14pt * 2;
+  font-family: "Fjalla One", sans-serif;
+}
+
+input{
+  background-color:#f8f4e5 ;
+  border: none;
+  border-bottom: 5px solid rgba(0,0,0,1);
+  margin-bottom: 14pt * 2;
+  min-width: 250px;
+  padding-left: 5px;
+  outline: none;
+  line-height: 14pt * 2;
+  color: rgba(0,0,0,1);
+  font-size: 14pt;
+  line-height: 14pt * 2;
+  font-family: "Fjalla One", sans-serif;
+}
+
+.val{
+  background-color:#f8f4e5 ;
+  border: none;
+  border-bottom: 5px solid rgba(0,0,0,1);
+  margin-bottom: 14pt * 2;
+  min-width: 250px;
+  padding-left: 5px;
+  outline: none;
+  line-height: 14pt * 2;
+  color: rgba(0,0,0,1);
+  font-size: 14pt;
+  line-height: 14pt * 2;
+  font-family: "Fjalla One", sans-serif;
+}
+
+.Conteneur{
+  margin-right: 40%;
+  margin-left: 10%;
+  margin-top: 10%;
+  margin-bottom: 10%;
+}
+
+.sep{
+  margin-top: 20%;
+}
+
+.ESP{
+  background-color: #f8f4e5;
+  box-shadow: 5px 5px 1px #ffa580, 5px 5px 1px 2px rgba(0,0,0,1);
+  min-width: 33%;
+  margin-top: 10%;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #ffa580;;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #ffa580;;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(40px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+  
