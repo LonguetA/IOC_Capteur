@@ -44,13 +44,13 @@ Dans un premier temps, nous devons être capable d'avoir un client MQTT sur notr
 
 On définit tous d'abord des constantes pour notre réseaux wifi pour que notre esp32 puisse se connecter dessus : 
 
-```ino
+```cpp
 const char* ssid = "";
 const char* password = "";
 ```
 
 On définit ensuite les informations concernant notre broker MQT
-```ìno 
+```cpp
 //Adresse IP du broker
 const char* mqtt_server = "192.168.1.146";
 
@@ -65,7 +65,7 @@ En effet, notre site est capable de controler 2 ESP32 les topics pour le premier
 On utilise WiFiClient qui est une classe de la bibliothèque WiFi de Arduino pour que notre esp32 se connecte a notre Broker via TCP/IP
 
 On utilise aussi PubSubClient afin de publier ou de s'abonner à des messages sur un broker MQTT
-```ìno
+```cpp
 WiFiClient espClient;
 PubSubClient client(espClient);
 ```
@@ -74,11 +74,11 @@ PubSubClient client(espClient);
 
 Dans la fonction setup_wifi, nous nous connectons au wifi : 
 
-```ino 
+```cpp
 void setup_wifi()
 ```
 
-```ino
+```cpp
 WiFi.begin(ssid, password);
 while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -92,19 +92,19 @@ Pour ce faire on utilise WIFI.begin pour se connecter à notre réseau WIFI.
 
 Dans la fonction reconnect, c'est au broker que nous nous connectons : 
 
-```ino
+```cpp
 void reconnect() 
 ```
 
 Cette fonction est bloquante tant que nous n'avons pas reussi à nous connecter à notre BROKER
 
-```ino
+```cpp
 while (!client.connected()) 
 ```
 
 Une fois notre connexion réussie, nous allons nous subscribe à nos topic définit précédement : 
 
-```ino
+```cpp
 if (client.connect("ESP32Client2")) {
     client.subscribe(mqtt_topic);
     client.subscribe(mqtt_topic2);
@@ -118,7 +118,7 @@ if (client.connect("ESP32Client2")) {
 
 On utilise ensuite la gestion des timers de la même façons que dans le TP5 avec la fonction waitFor
 
-```ino
+```cpp
 #define MAX_WAIT_FOR_TIMER 9
 unsigned int waitFor(int timer, unsigned long period)
 ```
@@ -127,7 +127,7 @@ unsigned int waitFor(int timer, unsigned long period)
 
 Pour que notre future tache LUM puisse communiquer sa valeur de luminosité avec notre tache MQTT, on utilise la meme structure de boite aux lettres que pour le TP5 : 
 
-```ino
+```cpp
 enum {EMPTY, FULL};
 
 struct mailbox_s {
@@ -140,7 +140,7 @@ struct mailbox_s {
 
 On utilise la meme tache LUM que dans le TP5 : 
 
-```ino
+```cpp
 struct Lum_s {
   int timer;                                             
   unsigned long period;                                
@@ -149,21 +149,21 @@ struct Lum_s {
 ```
 
 
-```ino 
+```cpp
 void loop_Lum( struct Lum_s * ctx,struct mailbox_s * mbLUM)
 ```
 
 Dans notre loop, nous allons lire la valeur de notre photo-résistance.
 Puis la mapper pour avoir un pourcentage de luminosité entre 0 et 100.
 
-```ino
+```cpp
 unsigned int res = analogRead(ctx->pin);                
 res = map(res,0,4096,100,0);
 ```
 
 On met ensuite cette valeur dans la boite aux lettres pour que notre tache MQTT puisse s'en servir.
 
-```ino 
+```cpp
 mbLUM->val = res;
 mbLUM->state = FULL; 
 ```
@@ -172,19 +172,19 @@ mbLUM->state = FULL;
 
 On définit maintenant une nouvelle tache MQTT qui va gérer le publish et la gestion de la réception de message en provenance du BROKER : 
 
-```ino
+```cpp
 void loop_mqtt(struct mailbox_s * mbLUM)
 ```
 
 Si notre boite au lettres provenant de LUM est vide, on quitte notre fonction car nous n'avons aucune valeur à envoyer.
 
-```ino
+```cpp
 if (mbLUM->state == EMPTY) return;
 ```
 
 Ensuite nous testons si nous sommes toujours connecté au BROKER car sinon nous ne pourrions pas envoyer nos données. 
 
-```ino
+```cpp
   if (!client.connected()) {
     reconnect();
   }
@@ -193,7 +193,7 @@ Ensuite nous testons si nous sommes toujours connecté au BROKER car sinon nous 
 On récupere ensuite la valeur de notre LUM puis on la convertie pour pouvoir l'envoyer.
 On utilise dtostrf qui permet de convertir un float en une chaîne de caractères.
 
-```ino
+```cpp
 float lum = mbLUM->val;
 char tempString[8];
 dtostrf(lum, 5, 2, tempString); 
@@ -201,7 +201,7 @@ dtostrf(lum, 5, 2, tempString);
 
 Nous faisons aussi de même pour notre topic : 
 
-```ino
+```cpp
 char topic[50];
 snprintf(topic, 50, "esp2/lum");
 ```
@@ -211,7 +211,7 @@ Ici esp2/lum sera esp1/lum pour le premier ESP.
 Pour finir, on envoit nore valeur grâce à publish, en présisant le topic sur lequel on envoie cette valeur.
 On indique aussi que notre boite au lettres est vide pour que la tache LUM puisse à nouveau écrire dedans.
 
-```ino
+```cpp
 client.publish(topic, tempString); // Envoi de la donnée sur le topic 
 mbLUM->state = EMPTY; 
 ```
@@ -220,14 +220,14 @@ mbLUM->state = EMPTY;
 
 On définit maintenant une fonction callback qui sera appelée lorsque l'on récevera un message sur un des topic sur lequel nous nous sommes inscrit : 
 
-```ino
+```cpp
 // Fonction de gestion de la réception des messages
 void callback(char* topic, byte* payload, unsigned int length) 
 ```
 
 On convertie tout d'abord notre payload en chaine de caractere : 
 
-```ino
+```cpp
 String message = "";
     for (int i = 0; i < length; i++) {
     message += (char)payload[i];
@@ -237,7 +237,7 @@ String message = "";
 Si notre message est sur le topic led.
 On regarde la valeur de ce message, et on allume ou non notre LED : 
 
-```ino
+```cpp
 if (message == "LED ON"){
     digitalWrite(LED_BUILTIN, HIGH);
 }
@@ -249,7 +249,7 @@ if (message == "LED OFF"){
 Si notre message n'était pas sur le topic led mais lcd, 
 on écrit alors notre message sur l'écran OLED : 
 
-```ino
+```cpp
 for (int i = 4 ; i < length ; i++){
     display.write(message[i]);
 }
@@ -264,13 +264,13 @@ On effectue ensuite notre setup :
 
 On place la pin de notre LED en sortie : 
 
-```ino
+```cpp
 pinMode(LED_BUILTIN, OUTPUT);
 ```
 
 On setup notre LCD : 
 
-```ino
+```cpp
 Wire.begin(4, 15);
 if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
     Serial.println(F("SSD1306 allocation failed"));
@@ -281,26 +281,26 @@ display.display();
 
 On configure notre communication SERIAL : 
 
-```ino
+```cpp
 Serial.begin(115200);
 ```
 
 On se connecte au WIFI : 
 
-```ino
+```cpp
 setup_wifi();
 ```
 
 On setup ensuite notre BROKER ainsi que notre fonction de callback : 
 
-```ino
+```cpp
 client.setServer(mqtt_server, 1883);
 client.setCallback(callback);
 ```
 
 Enfin, on setup notre tache LUM 
 
-```ino
+```cpp
 setup_Lum(&Lum1,5,5000000,A0);
 ```
 
@@ -308,7 +308,7 @@ setup_Lum(&Lum1,5,5000000,A0);
 
 Dans notre loop, on execute la loop MQTT et LUM : 
 
-```ino 
+```cpp
 void loop() {
   loop_mqtt(&mbLUM);
   loop_Lum(&Lum1,&mbLUM);       
@@ -411,18 +411,18 @@ def on_message(client, userdata, msg):
 
 En fonction du topic sur lequel le message à été envoyé, nous écrirons soit la valeur de luminosité dans un fichier lum1.txt 
 
-```ino
+```python
 if msg.topic == "esp1/lum":
-    f = open("lum1.txt", "w")
+    f = open("../CAPTEUR/lum1.txt", "w")
     f.write(str(msg.payload.decode())+"\n")
     f.close()
 ```
 
 Soit dans un fichier lum2.txt
 
-```ino
+```python
 if msg.topic == "esp2/lum":
-    f = open("lum2.txt","w")
+    f = open("../CAPTEUR/lum2.txt","w")
     f.write(str(msg.payload.decode())+"\n")
     f.close()
 ```
@@ -667,7 +667,7 @@ Cela aura pour effet d'envoyer une requete HTTP GET vers l'URI /LUM
 ```javascript
 <form method="GET" action="/LUM">
     <span class="val">LUM : ${lum}</span>
-    <button name="send" type="submit" value="../lum1.txt">VAL</button>
+    <button name="send" type="submit" value="../CAPTEUR/lum1.txt">VAL</button>
 </form>
 ```
 
@@ -704,7 +704,7 @@ res.send(`
     ... 
     <form method="GET" action="/LUM">
         <span class="val">LUM : ${lum}</span>
-        <button name="send" type="submit" value="../lum1.txt">VAL</button>
+        <button name="send" type="submit" value="../CAPTEUR/lum1.txt">VAL</button>
     </form>
     ...
 `)

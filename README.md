@@ -1,23 +1,29 @@
-# Lancer le projet 
+# Comment lancer le projet ?
 
 ## Architecture 
 
 ```
-Projet IOC 2023
+Projet IOC 23
     |
-    |_ _ _ MQTT
+    |_ _ _ RAPPORT IOC PROJET 23 (Rapport du projet)
+    |
+    |_ _ _ MQTT									(Fichiers pour les clientMQTT du rasbperry)
     |       |_ _ _ sendMQTT.py
     |       |_ _ _ clientMQTT.py
     |
-    |_ _ _ SERVEUR
-    |        |_ _ _ serveur.js
+    |_ _ _ IMG RAPPORT					(IMG pour le rapport .md)
     |
-    |_ _ _ CAPTEUR
+    |_ _ _ SERVEUR							(Fichiers pour le serveur HTTP)
+    |        |_ _ _ serveur.js
+    |				 |_ _ _ style.css
+    |
+    |_ _ _ CAPTEUR							(Fichiers pour les valeurs des capteurs)
     |         |_ _ _ lum1.txt
     |         |_ _ _ lum2.txt
     |
-    |_ _ _ ESP
-            |_ _ _ esp.ino
+    |_ _ _ ESP									(Fichiers pour ESP32)
+            |_ _ _ esp1.ino
+            |_ _ _ esp2.ino
    
 ```
 
@@ -43,7 +49,8 @@ Il faut installer les bibliothèques suivantes sur l'IDE auduino :
 Pour que le programme sur l'ESP32 fonctionne, il faut spécifier le nom du WIFI et son mot de passe sur lequel il va se connecter.
 Il faut également spécifier l'adresse IP du broker MQTT
 (hostname -I sur le rasbperry)
-```ino
+
+```cpp
 const char* ssid = "";
 const char* password = "";
 const char* mqtt_server = "X.X.X.X";
@@ -83,7 +90,7 @@ listener 1883
 
 Pour démarrer notre BROKER, on lance la commande suivante : 
 
-```shell
+```bash
 mosquitto -c /etc/mosquitto/mosquitto.conf 
 ```
 
@@ -96,9 +103,9 @@ Maintenant nous avons notre BROKER qui tourne en permanance.
 
 Il faut tous d'abord installer paho-mqtt pour que notre client fonctionne.
 
-```shell
+```bash
 pip install paho-mqtt
-``` 
+```
 ### Changement des paramêtres globaux 
 
 Dans le script clientMQTT.py il faut changer la ligne suivante avec l'adresse IP du broker : 
