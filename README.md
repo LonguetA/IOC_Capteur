@@ -13,9 +13,12 @@ Projet IOC 2023
     |        |_ _ _ serveur.js
     |
     |_ _ _ CAPTEUR
-              |_ _ _ lum1.txt
-              |_ _ _ lum2.txt
-
+    |         |_ _ _ lum1.txt
+    |         |_ _ _ lum2.txt
+    |
+    |_ _ _ ESP
+            |_ _ _ esp.ino
+   
 ```
 
 ## ESP : 
