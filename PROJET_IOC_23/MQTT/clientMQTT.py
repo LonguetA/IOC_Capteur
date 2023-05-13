@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 
 # Definir les informations de votre broker MQTT
-broker_address = "172.20.10.5"
+broker_address = ""
 broker_port = 1883
 mqtt_topic = "esp1/lum"
 mqtt_topic2 = "esp2/lum"

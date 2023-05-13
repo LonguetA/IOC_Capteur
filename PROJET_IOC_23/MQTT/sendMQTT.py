@@ -1,12 +1,8 @@
 import paho.mqtt.publish as publish
 import sys
 
-print("PASS")
-
-print(sys.argv)
-
 # Definir les informations du broker MQTT
-mqtt_broker = "172.20.10.5"
+mqtt_broker = ""
 mqtt_port = 1883
 mqtt_topic = sys.argv[1]
 
