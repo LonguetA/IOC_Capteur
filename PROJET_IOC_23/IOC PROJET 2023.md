@@ -746,7 +746,7 @@ const { spawn } = require('child_process');
 On définit ensuite le chemin de notre programme : 
 
 ```javascript
-const scriptPath = 'sendMQTT.py';
+const scriptPath = '../MQTT/sendMQTT.py';
 ```
 
 On lance ensuite notre script python avec la fonction spwan.
@@ -854,7 +854,7 @@ Comme pour LCD, on lance le script python sendMQTT.py
 
 ```javascript
 const { spawn } = require('child_process');
-const scriptPath = 'sendMQTT.py';
+const scriptPath = '../MQTT/sendMQTT.py';
 
 const pythonProcess = spawn('python3', [scriptPath,req.body.send,req.body.led]);
 ```
