@@ -5,6 +5,12 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <ToneESP32.h>
+
+#define BUZZER_PIN 17
+#define BUZZER_CHANNEL 0
+
+ToneESP32 buzzer(BUZZER_PIN, BUZZER_CHANNEL);
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -112,6 +118,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (message[0] == 'L' && message[1] == 'C' && message[2] == 'D'){
+    if(message[4] == 'M'&& message[5] == 'A' && message[6] == 'R'){
+      mario();
+    }
     display.clearDisplay();
     display.setTextSize(4);      // Normal 1:1 pixel scale
     display.setTextColor(WHITE); // Draw white text
@@ -185,4 +194,132 @@ void reconnect() {
       delay(5000);
     }
   }
+}
+
+
+// la fonction qui joue les chansons
+void beep( int note, int duree ) {                   
+    buzzer.tone(note, duree);       
+    //buzzer.noTone(); 
+    delay(duree*0.4);
+}
+
+//******* Mario ****************
+void mario() {
+  beep(NOTE_E7, 120);
+  beep(NOTE_E7, 120);
+  delay(120);  
+  beep(NOTE_E7, 120);
+  delay(120);  
+  beep(NOTE_C7, 120);
+  beep(NOTE_E7, 120);
+  delay(120);  
+  beep(NOTE_G7, 120);
+  delay(240);    
+  beep(NOTE_G6, 120);
+  delay(360); 
+  beep(NOTE_C7, 120);
+  delay(240); 
+  beep(NOTE_G6, 120);
+  delay(240);  
+  beep(NOTE_E6, 120);
+  delay(240);    
+  beep(NOTE_A6, 120);
+  delay(120);  
+  beep(NOTE_B6, 120);
+  delay(120);  
+  beep(NOTE_AS6, 120);
+  beep(NOTE_A6, 120);
+  delay(120); 
+  beep(NOTE_G6, 90);
+  beep(NOTE_E7, 90);
+  beep(NOTE_G7, 90);
+  beep(NOTE_A7, 120);
+  delay(120);  
+  beep(NOTE_F7, 120);
+  beep(NOTE_G7, 120);
+  delay(120);  
+  beep(NOTE_E7, 120);
+  delay(120);  
+  beep(NOTE_C7, 120);
+  beep(NOTE_D7, 120);
+  beep(NOTE_B6, 120);
+  delay(240);  
+  beep(NOTE_C7, 120);
+  delay(240);  
+  beep(NOTE_G6, 120);
+  delay(240);    
+  beep(NOTE_E6, 120);
+  delay(240);     
+  beep(NOTE_A6, 120);
+  delay(120);  
+  beep(NOTE_B6, 120);
+  delay(120);  
+  beep(NOTE_AS6, 120);
+  beep(NOTE_A6, 120);
+  delay(120); 
+  beep(NOTE_G6, 90);
+  beep(NOTE_E7, 90);
+  beep(NOTE_G7, 90);
+  beep(NOTE_A7, 120);
+  delay(120);  
+  beep(NOTE_F7, 120);
+  beep(NOTE_G7, 120);
+  delay(120);  
+  beep(NOTE_E7, 120);
+  delay(120);  
+  beep(NOTE_C7, 120);
+  beep(NOTE_D7, 120);
+  beep(NOTE_B6, 120);
+  delay(240);  
+  beep(NOTE_C4, 120);
+  beep(NOTE_C5, 120);
+  beep(NOTE_A3, 120);
+  beep(NOTE_A4, 120);
+  beep(NOTE_AS3, 120);
+  beep(NOTE_AS4, 120);
+  delay(90);    
+  beep(NOTE_C4, 120);
+  beep(NOTE_C5, 120);
+  beep(NOTE_A3, 120);
+  beep(NOTE_A4, 120);
+  beep(NOTE_AS3, 120);
+  beep(NOTE_AS4, 120);
+  delay(90);    
+  beep(NOTE_F3, 120);
+  beep(NOTE_F4, 120);
+  beep(NOTE_D3, 120);
+  beep(NOTE_D4, 120);
+  beep(NOTE_DS3, 120);
+  beep(NOTE_DS4, 120);
+  delay(90);   
+  beep(NOTE_F3, 120);
+  beep(NOTE_F4, 120);
+  beep(NOTE_D3, 120);
+  beep(NOTE_D4, 120);
+  beep(NOTE_DS3, 120);
+  beep(NOTE_DS4, 120);
+  delay(120);    
+  beep(NOTE_DS4, 180);
+  beep(NOTE_CS4, 180);
+  beep(NOTE_D4, 180);
+  beep(NOTE_CS4, 60);
+  beep(NOTE_DS4, 60);
+  beep(NOTE_DS4, 60);
+  beep(NOTE_GS3, 60);
+  beep(NOTE_G3, 60);
+  beep(NOTE_CS4, 60);
+  beep(NOTE_C4, 180);
+  beep(NOTE_FS4, 180);
+  beep(NOTE_F4, 180);
+  beep(NOTE_E3, 180);
+  beep(NOTE_AS4, 180);
+  beep(NOTE_A4, 180);
+  beep(NOTE_GS4, 100);
+  beep(NOTE_DS4, 100);
+  beep(NOTE_B3, 100);
+  beep(NOTE_AS3, 100);
+  beep(NOTE_A3, 100);
+  beep(NOTE_GS3, 100);
+  delay(90);  
 }
