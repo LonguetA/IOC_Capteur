@@ -6,11 +6,15 @@ const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 
+//Variable pour la luminosité
 var lum = -1;
 var lum2 = -1;
+
+//Variable pour l etat de la checkbox
 var led1_status = `<input type="checkbox" name="checkbox" value="dark" onclick="clickFn1(event)">`
 var led2_status = `<input type="checkbox" name="checkbox" value="dark" onclick="clickFn2(event)">`
 
+//ROUTE PAGE PRINCIPALE
 app.get('/',(req,res) => {
         
         
@@ -101,17 +105,22 @@ app.get('/',(req,res) => {
     `);
 });
 
+//ROUTE CSS
 app.get('/style.css',(req,res) => {
 	res.sendFile(__dirname + "/" + "style.css");
 });
 
+
+//ROUTE DEMANDE DE LUMINOSITE
 app.get('/LUM',(req,res) => {
 
+  //Lecture dans lum1 ou lum2 en fonction du corps de la requete
   var val = readFileSync(req.query.send,'utf-8');
 	
-  
+  //Si ESP 1
   if (req.query.send == "../CAPTEUR/lum1.txt") lum = val
-  else lum2 = val
+  else lum2 = val //Sinon
+
   res.send(`
                 <!DOCTYPE html>
                 <html lang=fr>
@@ -199,18 +208,19 @@ app.get('/LUM',(req,res) => {
     `);
 })
 
+//ROUTE MESSAGE SUR ECRAN ESP
 app.get('/LCD',(req,res) => {
 
-        console.log(req);
+    //Biblio pour creer process
 	const { spawn } = require('child_process');
 
-// Définir le chemin vers le script Python
-const scriptPath = '../MQTT/sendMQTT.py';
+    // Chemin vers le script sendMQTT
+    const scriptPath = '../MQTT/sendMQTT.py';
 
-// Créer un processus enfant pour exécuter le script Python
-const pythonProcess = spawn('python3', [scriptPath,req.query.send,'LCD '+ req.query.lcd]);	
+    // Creer un processus pour lancer le script avec en argument le topic et le message
+    const pythonProcess = spawn('python3', [scriptPath,req.query.send,'LCD '+ req.query.lcd]);	
 
-res.send(`
+    res.send(`
                 <!DOCTYPE html>
                 <html lang=fr>
                 <head>
@@ -297,13 +307,20 @@ res.send(`
     `);
 })
 
+//ROUTE ALLUMER OU ETEINDRE LED
 app.post('/LED',(req,res) => {
 
+    //Biblio pour creer process
 	const { spawn } = require('child_process');
+
+    //Chemin du script sendMQTT
     const scriptPath = '../MQTT/sendMQTT.py';
 
+    //Lancement du script python avec le topic et le message LED ON ou LED OFF
     const pythonProcess = spawn('python3', [scriptPath,req.body.send,req.body.led]);
 
+
+    //Changement de l etat de la checkbox en fonction du topic et de la requete
     if (req.body.send == "esp1/led"){
         if (req.body.led == "LED ON") led1_status = `<input type="checkbox" name="checkbox" checked value="dark" onclick="clickFn1(event)">`
         else led1_status = `<input type="checkbox" name="checkbox" value="dark" onclick="clickFn1(event)">`
@@ -313,19 +330,6 @@ app.post('/LED',(req,res) => {
         else led2_status = `<input type="checkbox" name="checkbox" value="dark" onclick="clickFn2(event)">`
     }
     
-
-    pythonProcess.stdout.on('data', (data) => {
-    console.log(`Sortie du script Python : ${data}`);
-    });
-
-
-    pythonProcess.stderr.on('data', (data) => {
-    console.error(`Erreur du script Python : ${data}`);
-    });
-
-    pythonProcess.on('close', (code) => {
-    console.log(`Processus Python terminé avec le code de sortie ${code}`);
-    });
 
 		res.send(`
                 <!DOCTYPE html>

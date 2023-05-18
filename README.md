@@ -1,27 +1,31 @@
 # Comment lancer le projet ?
 
+## Video de Demonstration 
+
+https://www.youtube.com/watch?v=UJGBorWOi7Q
+
 ## Architecture 
 
 ```
 Projet IOC 23
     |
-    |_ _ _ RAPPORT IOC PROJET 23 (Rapport du projet)
+    |_ _ _ RAPPORT IOC PROJET 23    (Rapport du projet)
     |
-    |_ _ _ MQTT									(Fichiers pour les clientMQTT du rasbperry)
+    |_ _ _ MQTT						(Fichiers pour les clientMQTT du raspberry)
     |       |_ _ _ sendMQTT.py
     |       |_ _ _ clientMQTT.py
     |
-    |_ _ _ IMG RAPPORT					(IMG pour le rapport .md)
+    |_ _ _ IMG RAPPORT			    (IMG pour le rapport .md)
     |
-    |_ _ _ SERVEUR							(Fichiers pour le serveur HTTP)
+    |_ _ _ SERVEUR				    (Fichiers pour le serveur HTTP)
     |        |_ _ _ serveur.js
-    |				 |_ _ _ style.css
+    |	     |_ _ _ style.css
     |
-    |_ _ _ CAPTEUR							(Fichiers pour les valeurs des capteurs)
+    |_ _ _ CAPTEUR					(Fichiers pour les valeurs des capteurs)
     |         |_ _ _ lum1.txt
     |         |_ _ _ lum2.txt
     |
-    |_ _ _ ESP									(Fichiers pour ESP32)
+    |_ _ _ ESP						(Fichiers pour ESP32)
             |_ _ _ esp1.ino
             |_ _ _ esp2.ino
    
@@ -37,18 +41,19 @@ https://www.arduino.cc/en/software
 
 ### Biblioteque ARDUINO IDE
 
-Il faut installer les bibliothèques suivantes sur l'IDE auduino : 
+Il faut installer les bibliothèques suivantes sur l'IDE Arduino : 
 
 * Adafruit BusIO
 * Adafruit GFX Library
 * Adafruit SSD1306 
 * PubSubClient 
+* ToneESP32
 
 ### Changement des paramêtres globaux 
 
 Pour que le programme sur l'ESP32 fonctionne, il faut spécifier le nom du WIFI et son mot de passe sur lequel il va se connecter.
 Il faut également spécifier l'adresse IP du broker MQTT
-(hostname -I sur le rasbperry)
+(hostname -I sur le raspberry)
 
 ```cpp
 const char* ssid = "";
@@ -94,8 +99,7 @@ Pour démarrer notre BROKER, on lance la commande suivante :
 mosquitto -c /etc/mosquitto/mosquitto.conf 
 ```
 
-On donne en argument de cette commande le fichier de config dénfinit précédement.
-Maintenant nous avons notre BROKER qui tourne en permanance.
+On donne en argument de cette commande le fichier de config définit précédemment. Maintenant, nous avons notre BROKER qui tourne en permanence.
 
 ## CLIENT RASPBERRY 
 
@@ -136,7 +140,7 @@ npm init -y
 
 ### Installation Biblioteque 
 
-Il faut installer la bibliotheque express et body-parser
+Il faut installer la bibliothèque express et body-parser
 
 ```shell 
 npm install express

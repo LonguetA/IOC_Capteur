@@ -19,18 +19,26 @@ ToneESP32 buzzer(BUZZER_PIN, BUZZER_CHANNEL);
 #define OLED_RESET     16 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-
+//Constantes pour se connecter au wifi
 const char* ssid = "";
 const char* password = "";
+
+
+// Informations concernant le broker MQTT 
+// Adresse ip du broker
 const char* mqtt_server = "";
+
+
+// Topic MQTT a ecouter
 const char* mqtt_topic = "esp1/led";
 const char* mqtt_topic2 = "esp1/lcd";
 
+// Wifi client
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 
-
+//Fonction TIMER 
 #define MAX_WAIT_FOR_TIMER 9
 unsigned int waitFor(int timer, unsigned long period){
   static unsigned long waitForTimer[MAX_WAIT_FOR_TIMER];  // il y a autant de timers que de tâches périodiques
@@ -41,6 +49,7 @@ unsigned int waitFor(int timer, unsigned long period){
   return delta;
 }
 
+//Structure pour mailBox
 enum {EMPTY, FULL};
 
 struct mailbox_s {
@@ -56,6 +65,7 @@ struct Lum_s {
   int pin;
 }; 
 
+//Setup de la fonction qui va permettre de lire la valeur de la luminosite 
 void setup_Lum( struct Lum_s * ctx, int timer,unsigned long period, byte pin) {
   ctx->timer = timer;
   ctx->period = period;
@@ -64,14 +74,19 @@ void setup_Lum( struct Lum_s * ctx, int timer,unsigned long period, byte pin) {
 }
 
 void loop_Lum( struct Lum_s * ctx,struct mailbox_s * mbLUM) {
+  //Si la periode ne c est pas encore ecoule
   if (!waitFor(ctx->timer, ctx->period)) return;  
 
-  unsigned int res = analogRead(ctx->pin);                       // Lecture
-  res = map(res,0,4096,100,0);
+  //Lecture de la valeur sur la photo-resistance
+  unsigned int res = analogRead(ctx->pin);
+
+  //Mapper la valeur afin de la convertir en pourcentage 
+  res = map(res,0,4096,100,0);  
 
   if (mbLUM->state != EMPTY) {
     return;
   }
+
   mbLUM->val = res;
   mbLUM->state = FULL; 
 }
@@ -80,67 +95,93 @@ void loop_Lum( struct Lum_s * ctx,struct mailbox_s * mbLUM) {
 
 void loop_mqtt(struct mailbox_s * mbLUM){
 
+  //Si aucune info de luminosite
   if (mbLUM->state == EMPTY) return;
 
+  //Connection au BROKER
   if (!client.connected()) {
     reconnect();
   }
+  
+  //Loop du client
   client.loop();  
 
-  float lum = mbLUM->val; // Valeur de lum à envoyer
+  //Valeur de lum à envoyer
+  float lum = mbLUM->val; 
   
+  //Conversion de la valeur en chaîne de caractères
   char tempString[8];
-  dtostrf(lum, 5, 2, tempString); // Conversion de la valeur en chaîne de caractères
+  dtostrf(lum, 5, 2, tempString); 
 
   char topic[50];
   snprintf(topic, 50, "esp1/lum");
 
-  client.publish(topic, tempString); // Envoi de la donnée sur le topic 
+  // Envoi de la donnée sur le topic 
+  client.publish(topic, tempString); 
 
+  //Vidage mailBOX
   mbLUM->state = EMPTY; 
 }
 
 // Fonction de gestion de la réception des messages
 void callback(char* topic, byte* payload, unsigned int length) {
+
   // Convertir le message en une chaîne de caractères
   String message = "";
   for (int i = 0; i < length; i++) {
     message += (char)payload[i];
   }
+
   // Afficher le message reçu
   Serial.println("Message recu : " + message);
 
+  //Si LED ON
   if (message == "LED ON"){
     digitalWrite(LED_BUILTIN, HIGH);
   }
+
+  //Si LED OFF
   if (message == "LED OFF"){
     digitalWrite(LED_BUILTIN, LOW);
   }
 
+  //Message sur le LCD
   if (message[0] == 'L' && message[1] == 'C' && message[2] == 'D'){
-    if(message[4] == 'M'&& message[5] == 'A' && message[6] == 'R'){
+
+    //Message special MARIO 
+    if(message[4] == 'M'&& message[5] == 'A' && message[6] == 'R' &&  message[7] == 'I' && message[8] == '0'){
       mario();
     }
+
+    //Setup Display
     display.clearDisplay();
     display.setTextSize(4);      // Normal 1:1 pixel scale
     display.setTextColor(WHITE); // Draw white text
     display.setCursor(0, 0);     // Start at top-left corner
     display.cp437(true);         // Use full 256 char 'Code Page 437' font
     
+    //Print char sur le display
     for (int i = 4 ; i < length ; i++){
       display.write(message[i]);
     }
+
+    //Affichage
     display.display();
   }
 }
-
+// Declaration des structures pour la luminosite 
 struct Lum_s Lum1;
 struct mailbox_s mbLUM = {.state = EMPTY};
 
+//Setup global
 void setup() {
+  //Setup PIN LED
   pinMode(LED_BUILTIN, OUTPUT);
 
+  //Setup SERIAL
   Wire.begin(4, 15);
+
+  //Setup LCD
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
@@ -149,46 +190,63 @@ void setup() {
 
 
   Serial.begin(115200);
+
+  //Setup WIFI
   setup_wifi();
+
+  //Setup mqtt
   client.setServer(mqtt_server, 1883);
 
-
+  //Set mqttCallback
   client.setCallback(callback);
 
+  //Setup LUM
   setup_Lum(&Lum1,5,5000000,A0);
 }
 
-
+//Loop global
 void loop() {
   loop_mqtt(&mbLUM);
   loop_Lum(&Lum1,&mbLUM);       
 }
 
+
+//Fonction qui va permettre de se connecter au wifi 
 void setup_wifi() {
   delay(10);
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
+
   WiFi.begin(ssid, password);
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
+
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
 }
 
+//Fonction qui permet de se connecter au broker MQTT
 void reconnect() {
+  // attendre que le client se connecte 
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
+
+    //Test si le client a pu se connecter en tant que ESP32Client2
     if (client.connect("ESP32Client1")) {
-        client.subscribe(mqtt_topic);
-        client.subscribe(mqtt_topic2);
+      //Subscribe aux Topics
+      client.subscribe(mqtt_topic);
+      client.subscribe(mqtt_topic2);
       Serial.println("connected");
     } else {
       Serial.print("failed, rc=");
+      //Affichage de l'etat du client afin d'identfier le probleme
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       delay(5000);
@@ -197,14 +255,13 @@ void reconnect() {
 }
 
 
-// la fonction qui joue les chansons
+//La fonction qui joue une note sur le BUZZER
 void beep( int note, int duree ) {                   
-    buzzer.tone(note, duree);       
-    //buzzer.noTone(); 
-    delay(duree*0.4);
+  buzzer.tone(note, duree);       
+  delay(duree*0.4);
 }
 
-//******* Mario ****************
+//Liste des notes pour la musique MARIO
 void mario() {
   beep(NOTE_E7, 120);
   beep(NOTE_E7, 120);

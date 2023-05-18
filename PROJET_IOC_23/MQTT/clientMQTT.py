@@ -16,10 +16,13 @@ def on_connect(client, userdata, flags, rc):
 # Fonction de gestion de la reception des messages
 def on_message(client, userdata, msg):
     print("Message recu sur le topic "+msg.topic+" : "+str(msg.payload.decode()))
+
+    #Si ESP 1 ecriture dans le fichier lum1
     if msg.topic == "esp1/lum":
         f = open("../CAPTEUR/lum1.txt", "w")
         f.write(str(msg.payload.decode())+"\n")
         f.close()
+    #Sinon ecriture dans le fichier lum2
     if msg.topic == "esp2/lum":
         f = open("../CAPTEUR/lum2.txt","w")
         f.write(str(msg.payload.decode())+"\n")

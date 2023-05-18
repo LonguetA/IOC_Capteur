@@ -3,12 +3,14 @@
 
 ## Introduction 
 
-Notre Projet consiste à envoyer des requêtes ou des commandes de notre page web codé en html sur notre l'esp32. Le protocole qu'on a utilisé est MQTT. Les commandes sont : 
+Notre Projet consiste à créer un réseau de capteur (constituer de 2 ESP32) qui vont communiquer en MQTT avec un BROKER sur Raspberry.
 
-- récupérer la valeur de la luminisoité ambiante de la pièce ou se trouve la carte et l'afficher sur le site web 
-- A l'aide d'un switch sur le site Web controller la Led (OFF ou ON)
-- Ecrire des messages sur le LCD et si le message envoyé est : 
-    -- Mario => la musique de Mario sera joué par le Buzzer
+Depuis un client WEB, il sera donc possible de communiquer avec ce réseau de capteur : 
+
+- Récupérer la valeur de luminosité captée par les 2 ESP
+- Allumer ou éteindre les LED des ESP
+- Écrire des messages sur les écrans des ESP
+
 ## Résumé de l'architecture globale : 
 
 ![archi](./IMG_RAPPORT/archi.png)
@@ -23,33 +25,32 @@ L'illustration ci-dessous résume le principe de fonctionnement de MQTT :
 
 ## ESP32 : 
 
-Dans le cadre du projet nous allons utiliser la platforme materielle suivante : 
+Dans le cadre du projet, nous allons utiliser la plateforme matérielle suivante : 
 
+Elle est composée : 
 
-Elle est composé : 
+- Un ESP32
+- Un écran OLED
+- Un Buzzer
+- Un bouton
 
-* Un ESP32
-* Un ecran OLED
-* Un Buzzer
-* Un bouton
-
-Notre but est de pouvoir écrire des messages sur l'écran OLED, allumer / eteindre les LED et envoyer la valeur de luminosité vers le serveur.
+Notre but est de pouvoir écrire des messages sur l'écran OLED, allumer / éteindre les LED et envoyer la valeur de luminosité vers le serveur.
 
 ### Mise en place du client MQTT
 
-Dans un premier temps, nous devons être capable d'avoir un client MQTT sur notre ESP32 qui va s'abonné sur des topics et publish.
+Dans un premier temps, nous devons être capables d'avoir un client MQTT sur notre ESP32 qui va s'abonner sur des topics et publish.
 
 
 #### Definition des constantes 
 
-On définit tous d'abord des constantes pour notre réseaux wifi pour que notre esp32 puisse se connecter dessus : 
+On définit tous d'abord des constantes pour notre réseau wifi pour que notre esp32 puisse se connecter dessus : 
 
 ```cpp
 const char* ssid = "";
 const char* password = "";
 ```
 
-On définit ensuite les informations concernant notre broker MQT
+On définit ensuite les informations concernant notre broker MQTT
 ```cpp
 //Adresse IP du broker
 const char* mqtt_server = "192.168.1.146";
@@ -59,12 +60,12 @@ const char* mqtt_topic = "esp2/led";
 const char* mqtt_topic2 = "esp2/lcd";
 ```
 
-Ici nous mettons le topic esp2/X car nous sommes sur le deuxieme ESP.
-En effet, notre site est capable de controler 2 ESP32 les topics pour le premiers seront esp1/X et pour le deuxieme esp2/X
+Ici, nous mettons le topic esp2/X, car nous sommes sur le deuxième ESP. En effet, notre site est capable de contrôler 2 ESP32 les topics pour le premier seront esp1/X et pour le deuxième esp2/X
 
-On utilise WiFiClient qui est une classe de la bibliothèque WiFi de Arduino pour que notre esp32 se connecte a notre Broker via TCP/IP
+On utilise WiFiClient qui est une classe de la bibliothèque WiFi d'Arduino pour que notre esp32 se connecte à notre Broker via TCP/IP
 
 On utilise aussi PubSubClient afin de publier ou de s'abonner à des messages sur un broker MQTT
+
 ```cpp
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -86,7 +87,7 @@ while (WiFi.status() != WL_CONNECTED) {
 }
 ```
 
-Pour ce faire on utilise WIFI.begin pour se connecter à notre réseau WIFI.
+Pour ce faire, on utilise WIFI.begin pour se connecter à notre réseau WIFI.
 
 #### Connexion BROKER
 
@@ -96,13 +97,13 @@ Dans la fonction reconnect, c'est au broker que nous nous connectons :
 void reconnect() 
 ```
 
-Cette fonction est bloquante tant que nous n'avons pas reussi à nous connecter à notre BROKER
+Cette fonction est bloquante tant que nous n'avons pas réussi à nous connecter à notre BROKER
 
 ```cpp
 while (!client.connected()) 
 ```
 
-Une fois notre connexion réussie, nous allons nous subscribe à nos topic définit précédement : 
+Une fois notre connexion réussie, nous allons nous subscribe à nos topic définit précédemment : 
 
 ```cpp
 if (client.connect("ESP32Client2")) {
@@ -116,7 +117,7 @@ if (client.connect("ESP32Client2")) {
 
 #### Gestion du timer
 
-On utilise ensuite la gestion des timers de la même façons que dans le TP5 avec la fonction waitFor
+On utilise ensuite la gestion des timers de la même façon que dans le TP5 avec la fonction waitFor
 
 ```cpp
 #define MAX_WAIT_FOR_TIMER 9
@@ -125,7 +126,7 @@ unsigned int waitFor(int timer, unsigned long period)
 
 #### Gestion de la communication
 
-Pour que notre future tache LUM puisse communiquer sa valeur de luminosité avec notre tache MQTT, on utilise la meme structure de boite aux lettres que pour le TP5 : 
+Pour que notre future tache LUM puisse communiquer sa valeur de luminosité avec notre tâche MQTT, on utilise la même structure de boite aux lettres que pour le TP5 : 
 
 ```cpp
 enum {EMPTY, FULL};
@@ -138,7 +139,7 @@ struct mailbox_s {
 
 #### Tache LUM
 
-On utilise la meme tache LUM que dans le TP5 : 
+On utilise la même tache LUM que dans le TP5 : 
 
 ```cpp
 struct Lum_s {
@@ -153,15 +154,14 @@ struct Lum_s {
 void loop_Lum( struct Lum_s * ctx,struct mailbox_s * mbLUM)
 ```
 
-Dans notre loop, nous allons lire la valeur de notre photo-résistance.
-Puis la mapper pour avoir un pourcentage de luminosité entre 0 et 100.
+Dans notre loop, nous allons lire la valeur de notre photorésistance. Puis la mapper pour avoir un pourcentage de luminosité entre 0 et 100.
 
 ```cpp
 unsigned int res = analogRead(ctx->pin);                
 res = map(res,0,4096,100,0);
 ```
 
-On met ensuite cette valeur dans la boite aux lettres pour que notre tache MQTT puisse s'en servir.
+On met ensuite cette valeur dans la boite aux lettres pour que notre tâche MQTT puisse s'en servir.
 
 ```cpp
 mbLUM->val = res;
@@ -170,19 +170,19 @@ mbLUM->state = FULL;
 
 #### Tache MQTT
 
-On définit maintenant une nouvelle tache MQTT qui va gérer le publish et la gestion de la réception de message en provenance du BROKER : 
+On définit maintenant une nouvelle tâche MQTT qui va gérer le publish et la gestion de la réception de message en provenance du BROKER : 
 
 ```cpp
 void loop_mqtt(struct mailbox_s * mbLUM)
 ```
 
-Si notre boite au lettres provenant de LUM est vide, on quitte notre fonction car nous n'avons aucune valeur à envoyer.
+Si notre boite à la lettre provenant de LUM est vide, on quitte notre fonction, car nous n'avons aucune valeur à envoyer.
 
 ```cpp
 if (mbLUM->state == EMPTY) return;
 ```
 
-Ensuite nous testons si nous sommes toujours connecté au BROKER car sinon nous ne pourrions pas envoyer nos données. 
+Ensuite, nous testons si nous sommes toujours connectés au BROKER, car sinon nous ne pourrions pas envoyer nos données. 
 
 ```cpp
   if (!client.connected()) {
@@ -190,8 +190,7 @@ Ensuite nous testons si nous sommes toujours connecté au BROKER car sinon nous 
   }
 ```
 
-On récupere ensuite la valeur de notre LUM puis on la convertie pour pouvoir l'envoyer.
-On utilise dtostrf qui permet de convertir un float en une chaîne de caractères.
+On récupère ensuite la valeur de notre LUM puis on la convertie pour pouvoir l'envoyer. On utilise dtostrf qui permet de convertir un float en une chaîne de caractères.
 
 ```cpp
 float lum = mbLUM->val;
@@ -208,8 +207,7 @@ snprintf(topic, 50, "esp2/lum");
 
 Ici esp2/lum sera esp1/lum pour le premier ESP.
 
-Pour finir, on envoit nore valeur grâce à publish, en présisant le topic sur lequel on envoie cette valeur.
-On indique aussi que notre boite au lettres est vide pour que la tache LUM puisse à nouveau écrire dedans.
+Pour finir, on envoie notre valeur grâce à publish, en précisant le topic sur lequel on envoie cette valeur. On indique aussi que notre boite à la lettre est vide pour que la tache LUM puisse à nouveau écrire dedans.
 
 ```cpp
 client.publish(topic, tempString); // Envoi de la donnée sur le topic 
@@ -218,14 +216,14 @@ mbLUM->state = EMPTY;
 
 #### Gestion de la réception de message
 
-On définit maintenant une fonction callback qui sera appelée lorsque l'on récevera un message sur un des topic sur lequel nous nous sommes inscrit : 
+On définit maintenant une fonction callback qui sera appelée lorsque l'on recevra un message sur un des topic sur lequel nous nous sommes inscrits : 
 
 ```cpp
 // Fonction de gestion de la réception des messages
 void callback(char* topic, byte* payload, unsigned int length) 
 ```
 
-On convertie tout d'abord notre payload en chaine de caractere : 
+On convertit tout d'abord notre payload en chaine de caractère : 
 
 ```cpp
 String message = "";
@@ -256,7 +254,34 @@ for (int i = 4 ; i < length ; i++){
 display.display();
 ```
 
-On ignore les 4 premieres caractere car notre message est de la forme LCD MESSAGE
+On ignore les 4 premiers caractères car notre message est de la forme LCD MESSAGE
+
+Nous avons également un message spécial qui va lancer la musique de MARIO 
+
+```c
+if(message[4] == 'M'&& message[5] == 'A' && message[6] == 'R' && message[7] == 'I' && message[8] == 'O' ){
+  mario();
+}
+```
+
+La fonction mario() lance la musique de MARIO :
+
+```c
+void mario() {
+  ...
+  beep(NOTE_E7, 120);
+  beep(NOTE_E7, 120);
+  ....
+```
+
+ La fonction beep fait une certaine note sur le BUZZER en utilisant la bibliothèque ToneESP32 : 
+
+```c
+void beep( int note, int duree ) {                   
+	buzzer.tone(note, duree);       
+  delay(duree*0.4);
+}
+```
 
 ### Setup de nos taches 
 
@@ -306,7 +331,7 @@ setup_Lum(&Lum1,5,5000000,A0);
 
 ### Loop de nos taches
 
-Dans notre loop, on execute la loop MQTT et LUM : 
+Dans notre loop, on exécute la loop MQTT et LUM : 
 
 ```cpp
 void loop() {
@@ -348,14 +373,12 @@ Pour démarrer notre BROKER, on lance la commande suivante :
 mosquitto -c /etc/mosquitto/mosquitto.conf 
 ```
 
-On donne en argument de cette commande le fichier de config dénfinit précédement.
-Maintenant nous avons notre BROKER qui tourne en permanance.
+On donne en argument de cette commande le fichier de config définit précédemment. Maintenant, nous avons notre BROKER qui tourne en permanence.
 
 
-## Client MQTT sur notre RASBPERRY: 
+## Client MQTT sur notre RASPBERRY : 
 
-Pour recevoir les informations que nos client MQTT sur nos ESP32 vont envoyer au BROKER.
-Notre rasbperry doit aussi avoir son client MQTT. Ce dernier va devoir se connecter au BROKER, s'abonné sur les topics lum et faire de la gestion de ces donnée.
+Pour recevoir les informations que nos clients MQTT sur nos ESP32 vont envoyer au BROKER. Notre Raspberry doit aussi avoir son client MQTT. Ce dernier va devoir se connecter au BROKER, s'abonner sur les topics lum et faire de la gestion de ces données.
 
 ### Reception de requete : 
 
@@ -372,11 +395,12 @@ import paho.mqtt.client as mqtt
 
 Nous devons définir : 
 
-* L'adresse IP de notre BROKER
-* Son numéro de port
-* les topic auquels il va se subsribe
+- L'adresse IP de notre BROKER
+- Son numéro de port
+- les topic auxquels il va se subsribe
 
 Ce qui donne : 
+
 ```python
 broker_address = "172.20.10.5"
 broker_port = 1883
@@ -386,7 +410,7 @@ mqtt_topic2 = "esp2/lum"
 
 #### Fonction de connection : 
 
-Lors de notre connection, on doit se subscribe à nos topic LUM : 
+Lors de notre connexion, on doit se subscribe à nos topic LUM : 
 
 ```python
 # Fonction de gestion de la connexion
@@ -397,11 +421,11 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe(mqtt_topic2)
 ```
 
-De ce fait, notre client pourra recevoir les différentes valeur de luminosité mesurée.
+De ce fait, notre client pourra recevoir les différentes valeurs de luminosité mesurée.
 
 #### Fonction de réception de message : 
 
-Lorsque l'on aurra un message sur l'un des topic que nous avons subscribe, c'est cette fonction qui sera appellée.
+Lorsque l'on aura un message sur l'un des topic que nous avons subscribe, c'est cette fonction qui sera appelée.
 
 ```python
 # Fonction de gestion de la reception des messages
@@ -409,7 +433,7 @@ def on_message(client, userdata, msg):
     print("Message recu sur le topic "+msg.topic+" : "+str(msg.payload.decode()))
 ```
 
-En fonction du topic sur lequel le message à été envoyé, nous écrirons soit la valeur de luminosité dans un fichier lum1.txt 
+En fonction du topic sur lequel le message a été envoyé, nous écrirons soit la valeur de luminosité dans un fichier lum1.txt 
 
 ```python
 if msg.topic == "esp1/lum":
@@ -435,12 +459,12 @@ On initialise notre client MQTT :
 client = mqtt.Client()
 ```
 
-La biblioteque paho.mqtt.client définit ces 2 fonctions : 
+La bibliothèque paho.mqtt.client définit ces 2 fonctions : 
 
-* on_connect qui est appelée par le client MQTT lorsque la connexion avec le broker MQTT est réussit
-* on_message qui est appelée par le client MQTT lorsqu'un message est reçu sur un topic auquel le client est abonné
+- on_connect qui est appelée par le client MQTT lorsque la connexion avec le broker MQTT est réussi
+- on_message qui est appelée par le client MQTT lorsqu'un message est reçu sur un topic auquel le client est abonné
 
-On les connecte donc ces 2 fonctions avec notre nos fonctions définit précédement : 
+On les connecte donc ces 2 fonctions avec nos fonctions définit précédemment : 
 
 ```python 
 # Definir les fonctions de rappel
@@ -461,15 +485,13 @@ On peut donc lancer notre client avec la commande. :
 python3 ./clientMQTT.py
 ```
 
-Notre programme s'executera en boucle et recevera les valeurs de LUM de nos ESP32 avant de les écrires dans un fichier.
+Notre programme s'exécutera en boucle et recevra les valeurs de LUM de nos ESP32 avant de les écrire dans un fichier.
 
-## La gestion du publish sur le RASBPERRY
+## La gestion du publish sur le RASPBERRY
 
-Pour le publish de message sur les topic lcd ou led, nous avons décidé de créer un client MQTT temporaire.
-En effet, contrairement à notre Client MQTT pour la gestion de lum, ce client ne tournera pas en permanance.
+Pour le publish de message sur les topic lcd ou led, nous avons décidé de créer un client MQTT temporaire. En effet, contrairement à notre Client MQTT pour la gestion de lum, ce client ne tournera pas en permanence.
 
-Ce dernier va se connecter au BROKER pour envoyer un seul message puis se déconnecter.
-Nous avons fait ce choix au vu de comment nous avons géré l'envoie de requette au travers de notre serveur HTPP. Nous rentrerons dans les détails du serveur HTTP apres.
+Ce dernier va se connecter au BROKER pour envoyer un seul message puis se déconnecter. Nous avons fait ce choix au vu de comment nous avons géré l'envoie de requête au travers de notre serveur HTPP. Nous rentrerons dans les détails du serveur HTTP après.
 
 
 ### Script python 
@@ -486,7 +508,7 @@ Une fois fait, le client se déconnecte du broker.
 
 #### Biblioteque utilisé : 
 
-Comme pour la réception, on utilise paho.mqtt mais cette fois la biblioteque publish
+Comme pour la réception, on utilise paho.mqtt mais cette fois la bibliothèque publish
 
 ```python
 import paho.mqtt.publish as publish
@@ -504,8 +526,7 @@ mqtt_port = 1883
 mqtt_topic = sys.argv[1]
 ```
 
-On définit ici l'adresse IP de notre BROKER ainsi que son numéro de port.
-On récupere également notre topic.
+On définit ici l'adresse IP de notre BROKER ainsi que son numéro de port. On récupère également notre topic.
 
 #### Publish un message 
 
@@ -515,7 +536,7 @@ message = sys.argv[2]
 publish.single(mqtt_topic, payload=message, hostname=mqtt_broker, port=mqtt_port)
 ```
 
-Pour publish notre message on utilise la fonction paho.mqtt.publish
+Pour publish notre message, on utilise la fonction paho.mqtt.publish
 
 
 ## Serveur HTTP
@@ -538,8 +559,7 @@ On lance la commande :
 npm init -y
 ```
 
-Pour notre server Node.js, on utilise la biblioteque express qui fournit une interface simple pour la gestion des requêtes HTTP. Requete qui seront celle utilisées pour notre serveur.
-Nous utiliserons aussi body-parser pour récupérer les arguments dans le corps de nos requete HTTP.
+Pour notre server Node.js, on utilise la bibliothèque express qui fournit une interface simple pour la gestion des requêtes HTTP. Requêtes qui seront celle utilisée pour notre serveur. Nous utiliserons aussi body-parser pour récupérer les arguments dans le corps de nos requêtes HTTP.
 
 ```shell 
 npm install express
@@ -552,20 +572,20 @@ On crée un fichier server.js qui s'occupera de recevoir les requêtes et renvoy
 
 #### Import des biblioteques : 
 
-Nous avons la biblioteque FS pour lire et ecrire dans des fichiers 
+Nous avons la bibliothèque FS pour lire et écrire dans des fichiers 
 
 ```javascript
 const {readFileSync, writeFileSync} = require('fs');
 ```
 
-Express pour router nos requetes HTTP
+Express pour router nos requêtes HTTP
 
 ```javascript
 const express = require('express');
 const app = express();
 ```
 
-BodyParser pour récupérer les données envoyer dans les requetes HTTP du client.
+BodyParser pour récupérer les données envoyées dans les requêtes HTTP du client.
 
 ```javascript
 const bodyParser = require('body-parser');
@@ -574,7 +594,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 #### Principe de Express.js
 
-Le principe de express est de "router" les requetes recut depuis le client HTTP
+Le principe d'express est de "router" les requêtes reçut depuis le client HTTP
 
 Ce routage prend la forme suivante : 
 
@@ -584,20 +604,19 @@ app.type(path,(req,res) => {
 })
 ```
 
-1. Type notre type de requete HTTP, par exemple : 
+1. Type notre type de requête HTTP, par exemple : 
 
-* GET
-* POST 
-* PUT
-* DELETE
+- GET
+- POST 
+- PUT
+- DELETE
 
-2. Path, l'URI de la requête HTTP
-3. req le corps de la requête HTTP
-4. res la réponse de la requête qui sera renvoyée au client
-5. => {} La fonction appelée lors de la requête
+1. Path, l'URI de la requête HTTP
+2. req le corps de la requête HTTP
+3. res la réponse de la requête qui sera renvoyée au client
+4. => {} La fonction appelée lors de la requête
 
-
-La page HTML que nous renverons à notre client se fera de la manière suivante : 
+La page HTML que nous renverrons à notre client se fera de la manière suivante : 
 
 
 ```javascript
@@ -612,7 +631,7 @@ res.send(`
 `);
 ```
 
-Donc pour résumer, voici un exemple de traitement d'une requete GET sur l'URI /BONJOUR 
+Donc pour résumer, voici un exemple de traitement d'une requête GET sur l'URI /BONJOUR 
 
 ```javascript
 app.get("/BONJOUR",(req,res) => {
@@ -630,7 +649,7 @@ app.get("/BONJOUR",(req,res) => {
 ```
 #### Affichage coté client : 
 
-Voici la route Express qui géré l'affichage de la page web initiale lorsque le client se rend pour la premiere fois sur le site : 
+Voici la route Express qui géré l'affichage de la page web initiale lorsque le client se rend pour la première fois sur le site : 
 
 
 ```javascript
@@ -643,26 +662,25 @@ Notre page principale est de la forme suivante :
 
 ![principale](./IMG_RAPPORT/principale.png)
 
-On peut voir que nous avons 2 menus qui gere chacun un ESP.
+On peut voir que nous avons 2 menus qui gèrent chacun un ESP.
 
 ![menu](./IMG_RAPPORT/menu.png)
 
-
 Chaque menu contient : 
 
-* la valeur du capteur de luminosité qui peut etre rafrachit lors de l'appui sur un bouton.
-* L'écriture d'un message qui sera envoyer vers l'ecran OLED 
-* En effin une switch pour allumer / etiendre la led de l'ESP
+- La valeur du capteur de luminosité qui peut être rafraîchi lors de l'appui sur un bouton.
+- L'écriture d'un message qui sera envoyer vers l'écran OLED 
+- Et enfin une switch pour allumer / éteindre la led de l'ESP
 
 #### Récuperation de la valeur de luminosité : 
 
 * ##### Coté client : 
 
-Lorsque l'utilisateur voudra avoir la valeur du capteur, il appuira sur la bouton val 
+Lorsque l'utilisateur voudra avoir la valeur du capteur, il appuiera sur le bouton val 
 
 ![lum](./IMG_RAPPORT/lum.png)
 
-Cela aura pour effet d'envoyer une requete HTTP GET vers l'URI /LUM
+Cela aura pour effet d'envoyer une requête HTTP GET vers l'URI /LUM
 
 ```javascript
 <form method="GET" action="/LUM">
@@ -671,8 +689,7 @@ Cela aura pour effet d'envoyer une requete HTTP GET vers l'URI /LUM
 </form>
 ```
 
-On peut voir que notre valeur lum est ecrite de la maniere suivante : ${lum} car c'est une variable javascript de notre serveur.
-Lorsque l'on enverra la réponse, la valeur sera remplacé par celle de la variable.
+On peut voir que notre valeur lum est écrite de la manière suivante : ${lum} car c'est une variable javascript de notre serveur. Lorsque l'on enverra la réponse, la valeur sera remplacée par celle de la variable.
 
 * ##### Coté serveur : 
 
@@ -688,9 +705,9 @@ Dans la fonction, nous allons tous d'abord lire la valeur de luminosité écrite
 var val = readFileSync(req.query.send,'utf-8');
 ```
 
-Pour savoir quel fichier lire, ce dernier sera spécifié dans la requete HTTP (lum1.txt si EPS1 sinon lum2.txt)
+Pour savoir quel fichier lire, ce dernier sera spécifié dans la requête HTTP (lum1.txt si EPS1 sinon lum2.txt)
 
-Ensuite nous mettons à jour notre variable lum ou lum2 : 
+Ensuite, nous mettons à jour notre variable lum ou lum2 : 
 
 ```javascript
 if (req.query.send == "../lum1.txt") lum = val
@@ -718,7 +735,7 @@ Pour envoyer un message à afficher sur l'écran OLED de l'ESP, on remplit un fo
 
 ![oled](./IMG_RAPPORT/oled.png)
 
-Cela aura pour effet d’envoyer une requete HTTP POST vers l’URI /LCD
+Cela aura pour effet d’envoyer une requête HTTP POST vers l’URI /LCD
 
 ```javascript
 <form methode="POST" action="/LCD">
@@ -737,7 +754,7 @@ On récupère notre requête grâce à la route Express suivante :
 app.post('/LCD',(req,res) => {
 ```
 
-Pour pouvoir lancer notre script python sendMQTT.py nous avons besoin de la bibliothèque child_process : 
+Pour pouvoir lancer notre script python sendMQTT.py, nous avons besoin de la bibliothèque child_process : 
 
 ```javascript 
 const { spawn } = require('child_process');
@@ -757,15 +774,15 @@ const pythonProcess = spawn('python3', [scriptPath,req.query.send,'LCD '+ req.qu
 
 Avec  : 
 
-* req.query.send : TOPIC du message
-* req.query.lcd  : MESSAGE 
+- req.query.send : TOPIC du message
+- req.query.lcd  : MESSAGE 
 
-On récupère ces valeurs dans le corps de la requete HTTP ce qui correspond à req.query.
+On récupère ces valeurs dans le corps de la requête HTTP ce qui correspond à req.query.
 
-* send correspond à notre boutton dont le nom était send et qui contient le nom du topic
-* lcd correspond à notre input dont le nom était lcd et qui contient le message 
+- send correspond à notre bouton dont le nom était send et qui contient le nom du topic
+- lcd correspond à notre input dont le nom était lcd et qui contient le message 
 
-On renvoie ensuite notre page html avec le formulaire vide (Version réduite pour l'exemple ici) : 
+On renvoie ensuite notre page HTML avec le formulaire vide (Version réduite pour l'exemple ici) : 
 
 ```javascript 
 res.send(`
@@ -788,8 +805,7 @@ res.send(`
 
 Pour allumer / eteindre la led on dispose d'une switch.
 
-
-Lorsque l'on décoche la switch pour eteindre la led : 
+Lorsque l'on décoche la switch pour éteindre la led : 
 
 
 ![led_1](./IMG_RAPPORT/led_1.png)
@@ -806,7 +822,7 @@ Lorsque l'on coche la switch pour allumer la led :
 <input type="checkbox" checked name="checkbox" value="dark" onclick="clickFn1(event)">
 ```
 
-Quelque soit l'état de la switch on envoie une requete HTTP POST avec l'URI LED
+Quelque soit l'état de la switch on envoie une requête HTTP POST avec l'URI LED
 
 ```javascript
 <form method="post" action="/LED">
@@ -817,10 +833,9 @@ Quelque soit l'état de la switch on envoie une requete HTTP POST avec l'URI LED
 
 Comme on peut le voir, le nom du topic est précisé dans l'input send et l'état de la LED dans l'input led.
 
-Mais en HTML, il est impossible d'envoyer l'etat d'une checkbox décoché dans une requete HTTP.
-C'est donc pour cela qu'on utlise un formulaire caché qui sera envoyé.
+Mais en HTML, il est impossible d'envoyer l'état d'une checkbox décoché dans une requête HTTP. C'est donc pour cela qu'on utilise un formulaire caché qui sera envoyé.
 
-Dans le code de la checkbox, on ajoute le parametre suivant : 
+Dans le code de la checkbox, on ajoute le paramètre suivant : 
 
 ```javascript
 onclick="clickFn1(event)"
@@ -837,10 +852,9 @@ function clickFn1(event) {
 }
 ```
 
-Dans cette fonction, on récupère le form caché vu précédement avec la fonction document.getElementById.
-Ensuite, en fonction de la valeur de la checkbox, on change le message envoyé dans l'input led. 
+Dans cette fonction, on récupère le form caché vu précédemment avec la fonction document.getElementById. Ensuite, en fonction de la valeur de la checkbox, on change le message envoyé dans l'input led. 
 
-Ensuite, grâce à la méthode submit(), on envoie la requete HTTP de notre form caché.
+Ensuite, grâce à la méthode submit(), on envoie la requête HTTP de notre form caché.
 
 * ##### Coté serveur :  
 
@@ -862,14 +876,14 @@ const pythonProcess = spawn('python3', [scriptPath,req.body.send,req.body.led]);
 * req.body.send : le TOPIC
 * req.body.led  : LED ON ou LED OFF 
 
-Ensuite en fonction du message envoyé, on mettre notre checkbox comme checké ou non : 
+Ensuite en fonction du message envoyé, on met notre checkbox comme checké ou non : 
 
 ```javascript 
 if (req.body.led == "LED ON") led1_status = `<input type="checkbox" name="checkbox" checked value="dark" onclick="clickFn1(event)">`
 else led1_status = `<input type="checkbox" name="checkbox" value="dark" onclick="clickFn1(event)">`
 ```
 
-Et de meme si jamais la requete est pour l'ESP 2
+Et de même si jamais la requête est pour l'ESP 2
 
 On renvoie ensuite au client la page HTML avec la checkbox chéker ou non. (Version réduite pour l'exemple ici)
 
@@ -902,7 +916,7 @@ app.get('/style.css',(req,res) => {
 
 #### Démarage du serveur : 
 
-On choisit le port 8000 pour notre serveur ainsi que sont adresse IP
+On choisit le port 8000 pour notre serveur ainsi que son adresse IP
 
 ```javascript
 app.listen(8000,() => console.log('http://192.168.1.146/'));
