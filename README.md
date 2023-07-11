@@ -1,9 +1,5 @@
 # Comment lancer le projet ?
 
-## Video de Demonstration 
-
-https://www.youtube.com/watch?v=UJGBorWOi7Q
-
 ## Architecture 
 
 ```
